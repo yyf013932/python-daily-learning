@@ -5,8 +5,10 @@ f = open('test.txt', encoding='utf8')
 
 lines = f.readlines()[1:]
 
+# 分隔符 10个=以上
 pt = re.compile("={10,}\n")
 
+# 收发消息的行
 row_pt = re.compile("^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{1,2}:\d{1,2})\s+([^()\n]*)(\((\d+)\))*")
 
 '''
@@ -31,7 +33,6 @@ def put_content(u_name, m_name, time, content):
         key = 'receive'
     if u_name not in data.keys():
         data[u_name] = {'send': [], 'receive': []}
-    print(key, content.strip('[ \n]'))
     data[u_name][key].append((time, content.strip('[ \n]')))
 
 
@@ -79,4 +80,4 @@ for key in data.keys():
 
 df = pd.DataFrame(data=df_data, columns=['name', 's_r', 'time', 'content'])
 
-df.to_csv("d:/qq_format.csv")
+df.to_csv("d:/qq_format.csv", encoding='utf-8', index=None)
