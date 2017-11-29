@@ -4,12 +4,14 @@ import matplotlib.pyplot as plt
 import seaborn as sbn
 
 from sklearn.model_selection import cross_val_score, KFold, GridSearchCV
+from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from sklearn import linear_model
 from sklearn import preprocessing
 from sklearn import metrics
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.manifold import TSNE
 
 data = pd.read_csv('d:/resources/call_mess/total_data.csv', encoding='utf-8')
 data = data.drop('Unnamed: 0', axis=1)
@@ -76,23 +78,34 @@ drop_ex_value(data, ['pos_num_total', 'pos_call_total', 'nag_call_total',
 # 可视化查看特征
 g = sbn.FacetGrid(data, hue='good_bad')
 # g.map(sbn.kdeplot, 'pos_call_total', shade=True)
-g.map(sbn.kdeplot, 'pos_contact_time_total_ave', shade=True).add_legend()
+g.map(sbn.kdeplot, 'pos_contact_time_total', shade=True).add_legend()
 
 train_X = data.loc[:, 'mongth_len':'nag_num_total']
 train_Y = data.loc[:, 'good_bad']
-tX_scaled = preprocessing.StandardScaler().fit(train_X)
+tX_scaled = preprocessing.MinMaxScaler().fit(train_X)
 train_X = tX_scaled.transform(train_X)
 
-
 # 降维
+# 保留95%的能量值（方差差异度)
+pca = PCA(n_components=0.95)
+pca.fit(train_X)
+train_X_after_pca = pca.transform(train_X)
 
 
 def get_best_para_rf(x, y, c_max=2., cv=4, metric_n='roc_auc'):
     estimator = RandomForestClassifier(class_weight="balanced")
     param_grid = {'n_estimators': [50, 100, 200], 'max_features': ["sqrt", "log2", .8, 0.6, 0.4]}
+    # estimator = LogisticRegression()
+    # param_grid = {}
     clf = GridSearchCV(estimator=estimator, scoring=metric_n, param_grid=param_grid, cv=cv)
     clf.fit(x, y)
     return clf.best_estimator_, clf.best_score_, clf.best_params_
 
 
-be, bs, bp = get_best_para_rf(train_X, train_Y)
+be, bs, bp = get_best_para_rf(train_X_after_pca, train_Y)
+
+# tsne降维可视化
+X_tsne = TSNE(n_components=2, learning_rate=100).fit_transform(train_X)
+print("finishe!")
+plt.figure(figsize=(12, 6))
+plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=train_Y)
