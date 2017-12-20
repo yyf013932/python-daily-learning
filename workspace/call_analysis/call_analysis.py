@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sbn
 
 from sklearn.model_selection import cross_val_score, KFold, GridSearchCV
@@ -85,6 +86,20 @@ train_Y = data.loc[:, 'good_bad']
 tX_scaled = preprocessing.MinMaxScaler().fit(train_X)
 train_X = tX_scaled.transform(train_X)
 
+# pca降维可视化
+# 无明显区分度
+X_pca_3 = PCA(n_components=3).fit_transform(train_X)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(X_pca_3[:, 0], X_pca_3[:, 1], X_pca_3[:, 2], c=train_Y)
+
+# tsne降维可视化
+# 没有明显效果，无法进行数据区分
+X_tsne = TSNE(n_components=2, learning_rate=100).fit_transform(train_X)
+print("finishe!")
+plt.figure(figsize=(12, 6))
+plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=train_Y)
+
 # 降维
 # 保留95%的能量值（方差差异度)
 pca = PCA(n_components=0.95)
@@ -103,9 +118,3 @@ def get_best_para_rf(x, y, c_max=2., cv=4, metric_n='roc_auc'):
 
 
 be, bs, bp = get_best_para_rf(train_X_after_pca, train_Y)
-
-# tsne降维可视化
-X_tsne = TSNE(n_components=2, learning_rate=100).fit_transform(train_X)
-print("finishe!")
-plt.figure(figsize=(12, 6))
-plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=train_Y)
